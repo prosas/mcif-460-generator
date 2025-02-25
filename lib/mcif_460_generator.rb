@@ -1,31 +1,26 @@
+# frozen_string_literal: true
 
-require 'client'
+require "client"
 class MCIF460Generator
   def initialize(output_file)
     @output_file = output_file
     @clientes = []
   end
 
-  def adicionar_cliente(cliente)
+  def adicionar_cliente(_cliente)
     @clientes << Client.new(client)
   end
 
   def gerar_arquivo
-    File.open(@output_file, 'w') do |file|
+    File.open(@output_file, "w") do |file|
       gerar_header(file)
-      
+
       # gerar detalhes
-      
-      
-      
-      
-      @clientes.each_with_index do |cliente, index|
+
+      @clientes.each_with_index do |_cliente, _index|
         # file.puts gerar_detalhe(cliente, index + 1)
         generate_detail(file, client)
       end
-
-
-
 
       file.puts gerar_trailer
     end
@@ -33,7 +28,7 @@ class MCIF460Generator
 
   def gerar_header(file, data)
     # 000000024022025MCIF460
-    file.puts "0000000#{Time.now.strftime('%d%m%Y')}MCIF460"
+    file.puts "0000000#{Time.now.strftime("%d%m%Y")}MCIF460"
     file.puts mci_client_code(data[:mci_client_code])
     file.puts process_number(data[:process_number])
     file.puts sequence_number(data[:sequence_number])
@@ -68,83 +63,84 @@ class MCIF460Generator
     file.puts codigo_repasse(client.codigo_repasse)
     file.puts codigo_programa(client.codigo_programa)
   end
-  def mci_client_code(code) # 9
+
+  def mci_client_code(code)
     mandatory_field(code)
     validate_size(code, 9)
     validate_numeric(code)
 
-    code.rjust(9, '0')
+    code.rjust(9, "0")
   end
 
   # Número_Processo
-  def process_number(code='00000') # 5
+  def process_number(code = "00000")
     mandatory_field(code)
     validate_numeric(code)
 
-    code.rjust(5, '0')
+    code.rjust(5, "0")
   end
 
   # Sequencial_Remessa
-  def sequence_number(code='00000') # 5
+  def sequence_number(code = "00000")
     mandatory_field(code)
     validate_numeric(code)
 
-    code.rjust(5, '0')
+    code.rjust(5, "0")
   end
 
   # Versão_Leiaute - valor fixo
   def layout_version
-    '04'
+    "04"
   end
 
   # Agência_Relacionamento
-  def relationship_agency(code='0000') # 4
+  def relationship_agency(code = "0000")
     mandatory_field(code)
     validate_numeric(code)
 
-    code.rjust(4, '0')
+    code.rjust(4, "0")
   end
 
   # DV_Agência_Relacionamento
-  def dv_relationship_agency(code='0') # 1
+  def dv_relationship_agency(code = "0")
     mandatory_field(code)
     validate_numeric(code)
 
-    code.rjust(1, '0')
+    code.rjust(1, "0")
   end
 
   # Conta
-  def acount(code='00000000000') # 11
+  def acount(code = "00000000000")
     mandatory_field(code)
     validate_numeric(code)
 
-    code.rjust(11, '0')
+    code.rjust(11, "0")
   end
 
   # DV Conta
-  def dv_acount(code='0') # 1
+  def dv_acount(code = "0")
     mandatory_field(code)
     validate_numeric(code)
 
-    code.rjust(11, '0')
+    code.rjust(11, "0")
   end
 
   # Indicador_Envio_KIT - fixo 1
   def kit_indicator
-    '1'
+    "1"
   end
 
   def white_spaces(spaces)
-    ''.rjust(spaces, ' ')
+    "".rjust(spaces, " ")
   end
 
   # Detail
   def type_detail
-    '01'
+    "01"
   end
 
   # Tipo_Pessoa - VIDE TABELA
-  # 1	Física	E	Soc Economia Mista GDF        
+  # 1	Física	E	Soc Economia Mista GDF
   # 2	PJ Privada	F	Fundação Estadual
   # 3	Governo Municipal - Adm Direta (FUNDOS ESTADUAIS)	G	Fundação Municipal
   # 4	Governo Estadual - Adm Direta	H	Fundação Estadual GDF
@@ -152,12 +148,12 @@ class MCIF460Generator
   # 6	Empresa Pública Federal	J	Autarquia Federal
   # 7	Soc de Economia Mista Federal	K	Autarquia Estadual
   # 8	Fundação Federal	L	Autarquia Estadual GDF
-  # 9	Empresa Pública Estadual	M	Autarquia Municipal 
+  # 9	Empresa Pública Estadual	M	Autarquia Municipal
   # A	Empresa Pública Municipal	N	Inst/Entidade Publica Municipal
   # B	Empresa Pública GDF	O	Inst/Entidade Publica Estadual
   # C	Soc Economia Mista Estadual   	P	Inst/Entidade Publica Federal
-  # D	Soc Economia Mista Municipal		
-  # E	Soc Economia Mista GDF        
+  # D	Soc Economia Mista Municipal
+  # E	Soc Economia Mista GDF
   # F	Fundação Estadual
   # G	Fundação Municipal
   # H	Fundação Estadual GDF
@@ -165,81 +161,82 @@ class MCIF460Generator
   # J	Autarquia Federal
   # K	Autarquia Estadual
   # L	Autarquia Estadual GDF
-  # M	Autarquia Municipal 
+  # M	Autarquia Municipal
   # N	Inst/Entidade Publica Municipal
   # O	Inst/Entidade Publica Estadual
   # P	Inst/Entidade Publica Federal
-  def person_type(type) # 1
-    type_formated =  type.to_s.upcase
-    return raise 'invalide code to person type' if type_formated.match(/\A[A-P1-9]\z/).nil?
+
+  def person_type(type)
+    type_formated = type.to_s.upcase
+    return raise "invalide code to person type" if type_formated.match(/\A[A-P1-9]\z/).nil?
 
     type_formated
   end
 
   # Tipo de CPF/CNPJ -Fixo "1" para CPF Próprio, ou  "2" para CPF não Próprio, ou "3" para CNPJ
-  def type_cpf_cnpj(type) # 1
-    return raise 'invalide code to person type CPF/CNPJ' unless ['1', '2', '3'].include?(type.to_s)
+  def type_cpf_cnpj(type)
+    return raise "invalide code to person type CPF/CNPJ" unless %w[1 2 3].include?(type.to_s)
 
     type
   end
 
-  def cpf_cnpj(value) #14 
-    return raise 'invalide cpf or cnpj' if !is_integer?(value) || (value.length != 14 && value.length != 11)
-  
-    value.rjust(14, '0')
+  def cpf_cnpj(value)
+    return raise "invalide cpf or cnpj" if !is_integer?(value) || (value.length != 14 && value.length != 11)
+
+    value.rjust(14, "0")
   end
-  
+
   # Data_Nascimento
-  def data_nascimento(date) # 8
-    return raise 'invalid date' if !is_integer?(date) || date.length != 8
+
+  def data_nascimento(date)
+    return raise "invalid date" if !is_integer?(date) || date.length != 8
 
     date
   end
 
   # Nome_Cliente
-  def client_name(name) # 60
-    name.ljust(60, ' ')
+  def client_name(name)
+    name.ljust(60, " ")
   end
 
   # Nome_Personalizado_Cliente
-  def personal_name_client(name) #25
-    name.ljust(25, ' ')
+  def personal_name_client(name)
+    name.ljust(25, " ")
   end
 
   # Uso_Cliente
-  def free_use(text) # 8 
-    text.ljust(8, ' ')
+  def free_use(text)
+    text.ljust(8, " ")
   end
 
   # Numero_Programa_Gestão_Agil
-  def numero_gestao_agil(num) # 9
+  def numero_gestao_agil(num)
     validate_alphanumeric(num)
 
-    num.rjust(9, '0')
+    num.rjust(9, "0")
   end
 
   # Agência_Cliente
-  def client_agency(ag) #4
+  def client_agency(ag)
     validate_numeric(ag)
-    return raise 'Invalid client Agency' if ag.to_s.length > 4
-    
-    ag.rjust(4, '0')
+    return raise "Invalid client Agency" if ag.to_s.length > 4
+
+    ag.rjust(4, "0")
   end
 
   # DV_Agência_Cliente
   def dv_client_agency(code)
     validate_numeric(code)
-    
-    return raise 'invalid DV Agency' if code.to_s != 1
-    
+
+    return raise "invalid DV Agency" if code.to_s != 1
+
     code
   end
 
-
   # Grupo_Setex
-  def setex_group(code) # 2
+  def setex_group(code)
     validate_numeric(code)
-    return raise 'valor obrigatório. 2 dígitos' if code.length != 2
+    return raise "valor obrigatório. 2 dígitos" if code.length != 2
 
     code
   end
@@ -247,58 +244,64 @@ class MCIF460Generator
   # DV_Grupo Setex
   def dv_setex_group(code)
     validate_numeric(code)
-    return raise 'valor obrigatório. 1 dígito' if code.length != 1
+    return raise "valor obrigatório. 1 dígito" if code.length != 1
 
     code
   end
 
   # Natureza_Jurídica
-  def natureza_juridica # 3
-    '000'
+  def natureza_juridica
+    "000"
   end
-  
+
   # Código_Repasse -  Fixo "01" para Voluntário/Convênio OU "02" para Automático/Fundo a Fundo
-  def codigo_repasse(code) # 2
-    return raise 'Invalide code' unless ['01', '02'].include?(code.to_s)
+  def codigo_repasse(code)
+    return raise "Invalide code" unless %w[01 02].include?(code.to_s)
 
     code
   end
 
   # Código_Programa
-  def codigo_programa(code) #3
+  def codigo_programa(code)
     validate_numeric(code)
     code.length
-    code.rjust(9, '0')
+    code.rjust(9, "0")
   end
 
-  def gerar_trailer(total_clients, quantity_registries) # 5
-    constante = "9999999".ljust(150, ' ')
-    total = "#{total_clients}".rjust(5, '0')
+  def gerar_trailer(total_clients, quantity_registries)
+    return raise "invalid trailer" if !is_integer?(total_clients) || !is_integer?(quantity_registries)
+
+    constante = "9999999"
+    total = total_clients.to_s.rjust(5, "0")
     # Quantidade_Registros - Total de Registros (inclusive HEADER e TRAILER)
-    quantity_registries.ljust(9, ' ')
+    quantity_registries.to_s.ljust(9, " ")
     # 129 espaços em branco
-    "#{constante}#{total}#{quantity_registries}".rjust(129, ' ')
+    "#{constante}#{total}#{quantity_registries}".ljust(129, " ")
   end
-
 
   def validate_alphanumeric(string)
-    return raise 'invalide data' if string.match(/\A[a-zA-Z0-9]*\z/).nil?
+    return raise "invalide data" if string.match(/\A[a-zA-Z0-9]*\z/).nil?
+
     true
   end
 
   def validate_numeric(string)
-    return raise 'invalide data' if string.match(/\A[0-9]*\z/).nil?
+    raise "invalide data" if string.match(/\A[0-9]*\z/).nil?
   end
 
   def mandatory_field(code)
-    return raise 'mandatory field' if code.nil?
+    raise "mandatory field" if code.nil?
   end
 
   def is_integer?(number)
-    !!Integer(number) rescue false
+    !Integer(number).nil?
+  rescue StandardError
+    false
   end
+
   def validate_size(text, max)
     return true if text.to_s.length <= max
-    return raise 'size error'
+
+    raise "Size error"
   end
 end
