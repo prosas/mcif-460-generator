@@ -108,29 +108,29 @@ class MCIF460GeneratorTest < Minitest::Test
     assert_raises(RuntimeError) { @generator.validate_alphanumeric("abc 23") }
   end
 
-  def test_codigo_repasse_valid_01
-    assert_equal "01", @generator.codigo_repasse("01")
+  def test_pass_code_valid_01
+    assert_equal "01", @generator.pass_code("01")
   end
 
-  def test_codigo_repasse_valid_02
-    assert_equal "02", @generator.codigo_repasse("02")
+  def test_pass_code_valid_02
+    assert_equal "02", @generator.pass_code("02")
   end
 
-  def test_codigo_repasse_invalid_03
-    assert_raises(RuntimeError) { @generator.codigo_repasse("03") }
+  def test_pass_code_invalid_03
+    assert_raises(RuntimeError) { @generator.pass_code("03") }
   end
 
-  def test_gerar_trailer_valid_input
+  def test_generate_trailer_valid_input
     total_clients = 10
     quantity_registries = 20
     const = "9999999"
     expected_output = "#{const}#{"10".rjust(5, "0")}#{"20".ljust(9, " ")}".ljust(129, " ")
-    assert_equal expected_output, @generator.gerar_trailer(total_clients, quantity_registries)
+    assert_equal expected_output, @generator.generate_trailer(total_clients, quantity_registries)
   end
 
-  def test_gerar_trailer_invalid_input
+  def test_generate_trailer_invalid_input
     total_clients = "abc"
     quantity_registries = "def"
-    assert_raises(RuntimeError) { @generator.gerar_trailer(total_clients, quantity_registries) }
+    assert_raises(RuntimeError) { @generator.generate_trailer(total_clients, quantity_registries) }
   end
 end

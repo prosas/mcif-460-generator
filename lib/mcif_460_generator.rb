@@ -4,39 +4,36 @@ require "client"
 class MCIF460Generator
   def initialize(output_file)
     @output_file = output_file
-    @clientes = []
+    @clients = []
   end
 
-  def adicionar_cliente(_cliente)
-    @clientes << Client.new(client)
+  def add_client(_cliente)
+    @clients << Client.new(client)
   end
 
-  def gerar_arquivo
+  def generate_file
     File.open(@output_file, "w") do |file|
-      gerar_header(file)
+      generate_header(file)
 
-      # gerar detalhes
-
-      @clientes.each_with_index do |_cliente, _index|
-        # file.puts gerar_detalhe(cliente, index + 1)
+      @clients.each_with_index do |_cliente, _index|
         generate_detail(file, client)
       end
 
-      file.puts gerar_trailer
+      file.puts generate_trailer
     end
   end
 
-  def gerar_header(file, data)
+  def generate_header(file, client)
     # 000000024022025MCIF460
     file.puts "0000000#{Time.now.strftime("%d%m%Y")}MCIF460"
-    file.puts mci_client_code(data[:mci_client_code])
-    file.puts process_number(data[:process_number])
-    file.puts sequence_number(data[:sequence_number])
+    file.puts mci_client_code(client.mci_client_code)
+    file.puts process_number(client.process_number)
+    file.puts sequence_number(client.sequence_number)
     file.puts layout_version
-    file.puts relationship_agency(data[:relationship_agency])
-    file.puts dv_relationship_agency(data[:dv_relationship_agency])
-    file.puts acount(data[:acount])
-    file.puts dv_acount(data[:acount])
+    file.puts relationship_agency(client.relationship_agency)
+    file.puts dv_relationship_agency(client.dv_relationship_agency)
+    file.puts acount(client.acount)
+    file.puts dv_acount(client.dv_acount)
     file.puts kit_indicator
     file.puts white_spaces(88)
 
@@ -49,18 +46,18 @@ class MCIF460Generator
     file.puts person_type(client.person_type)
     file.puts type_cpf_cnpj(client.type_cpf_cnpj)
     file.puts cpf_cnpj(client.cpf_cnpj)
-    file.puts data_nascimento(client.data_nascimento)
+    file.puts date_of_birth(client.date_of_birth)
     file.puts client_name(client.name)
     file.puts personal_name_client(client.personal_name_client)
     file.puts white_spaces(1)
     file.puts free_use(client.free_use)
-    file.puts numero_gestao_agil(client.numero_gestao_agil)
+    file.puts agile_management_number(client.agile_management_number)
     file.puts client_agency(client.agency)
     file.puts dv_client_agency(client.dv_client_agency)
     file.puts setex_group(client.setex_group)
     file.puts dv_setex_group(client.dv_setex_group)
-    file.puts natureza_juridica(client.natureza_juridica)
-    file.puts codigo_repasse(client.codigo_repasse)
+    file.puts legal_nature(client.legal_nature)
+    file.puts pass_code(client.pass_code)
     file.puts codigo_programa(client.codigo_programa)
   end
 
@@ -186,9 +183,8 @@ class MCIF460Generator
     value.rjust(14, "0")
   end
 
-  # Data_Nascimento
-
-  def data_nascimento(date)
+  # Data_de_nascimento
+  def date_of_birth(date)
     return raise "invalid date" if !is_integer?(date) || date.length != 8
 
     date
@@ -210,7 +206,7 @@ class MCIF460Generator
   end
 
   # Numero_Programa_Gestão_Agil
-  def numero_gestao_agil(num)
+  def agile_management_number(num)
     validate_alphanumeric(num)
 
     num.rjust(9, "0")
@@ -236,7 +232,7 @@ class MCIF460Generator
   # Grupo_Setex
   def setex_group(code)
     validate_numeric(code)
-    return raise "valor obrigatório. 2 dígitos" if code.length != 2
+    return raise "Mandatory value. 2 digits" if code.length != 2
 
     code
   end
@@ -244,18 +240,18 @@ class MCIF460Generator
   # DV_Grupo Setex
   def dv_setex_group(code)
     validate_numeric(code)
-    return raise "valor obrigatório. 1 dígito" if code.length != 1
+    return raise "Mandatory value. 1 digits" if code.length != 1
 
     code
   end
 
   # Natureza_Jurídica
-  def natureza_juridica
+  def legal_nature
     "000"
   end
 
   # Código_Repasse -  Fixo "01" para Voluntário/Convênio OU "02" para Automático/Fundo a Fundo
-  def codigo_repasse(code)
+  def pass_code(code)
     return raise "Invalide code" unless %w[01 02].include?(code.to_s)
 
     code
@@ -268,7 +264,7 @@ class MCIF460Generator
     code.rjust(9, "0")
   end
 
-  def gerar_trailer(total_clients, quantity_registries)
+  def generate_trailer(total_clients, quantity_registries)
     return raise "invalid trailer" if !is_integer?(total_clients) || !is_integer?(quantity_registries)
 
     constante = "9999999"
