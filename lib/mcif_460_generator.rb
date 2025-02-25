@@ -67,12 +67,10 @@ class MCIF460Generator
     file.puts natureza_juridica(client.natureza_juridica)
     file.puts codigo_repasse(client.codigo_repasse)
     file.puts codigo_programa(client.codigo_programa)
-
-
-    # apos nome personalizado 
   end
   def mci_client_code(code) # 9
     mandatory_field(code)
+    validate_size(code, 9)
     validate_numeric(code)
 
     code.rjust(9, '0')
@@ -140,10 +138,7 @@ class MCIF460Generator
     ''.rjust(spaces, ' ')
   end
 
-
-
   # Detail
-
   def type_detail
     '01'
   end
@@ -176,33 +171,33 @@ class MCIF460Generator
   # P	Inst/Entidade Publica Federal
   def person_type(type) # 1
     type_formated =  type.to_s.upcase
-    raise 'invalide code to person type' if type_formated.match(/\A[A-P1-9]\z/).nil?
+    return raise 'invalide code to person type' if type_formated.match(/\A[A-P1-9]\z/).nil?
 
     type_formated
   end
 
   # Tipo de CPF/CNPJ -Fixo "1" para CPF Próprio, ou  "2" para CPF não Próprio, ou "3" para CNPJ
   def type_cpf_cnpj(type) # 1
-    raise 'invalide code to person type CPF/CNPJ' unless ['1', '2', '3'].include?(type.to_s)
+    return raise 'invalide code to person type CPF/CNPJ' unless ['1', '2', '3'].include?(type.to_s)
 
     type
   end
 
-  def cpf_cnpj(value) #14
-    raise 'invalide cpf or cnpj' if !is_integer?(value) && (value != 14 && value !=11)
+  def cpf_cnpj(value) #14 
+    return raise 'invalide cpf or cnpj' if !is_integer?(value) || (value.length != 14 && value.length != 11)
   
     value.rjust(14, '0')
   end
   
   # Data_Nascimento
-  def data_nascimento(date) #8
-    raise 'invalid date' if !is_integer?(date) || date.length != 8
+  def data_nascimento(date) # 8
+    return raise 'invalid date' if !is_integer?(date) || date.length != 8
 
     date
   end
 
   # Nome_Cliente
-  def client_name(name) #60
+  def client_name(name) # 60
     name.ljust(60, ' ')
   end
 
@@ -213,7 +208,7 @@ class MCIF460Generator
 
   # Uso_Cliente
   def free_use(text) # 8 
-    text(8, ' ')
+    text.ljust(8, ' ')
   end
 
   # Numero_Programa_Gestão_Agil
@@ -226,7 +221,7 @@ class MCIF460Generator
   # Agência_Cliente
   def client_agency(ag) #4
     validate_numeric(ag)
-    raise 'Invalida client Agency' if ag.to_s.length > 4
+    return raise 'Invalid client Agency' if ag.to_s.length > 4
     
     ag.rjust(4, '0')
   end
@@ -235,7 +230,7 @@ class MCIF460Generator
   def dv_client_agency(code)
     validate_numeric(code)
     
-    raise 'invalid DV Agency' if code.to_s != 1
+    return raise 'invalid DV Agency' if code.to_s != 1
     
     code
   end
@@ -244,7 +239,7 @@ class MCIF460Generator
   # Grupo_Setex
   def setex_group(code) # 2
     validate_numeric(code)
-    raise 'valor obrigatório. 2 dígitos' if code.length != 2
+    return raise 'valor obrigatório. 2 dígitos' if code.length != 2
 
     code
   end
@@ -252,7 +247,7 @@ class MCIF460Generator
   # DV_Grupo Setex
   def dv_setex_group(code)
     validate_numeric(code)
-    raise 'valor obrigatório. 1 dígito' if code.length != 1
+    return raise 'valor obrigatório. 1 dígito' if code.length != 1
 
     code
   end
@@ -264,7 +259,7 @@ class MCIF460Generator
   
   # Código_Repasse -  Fixo "01" para Voluntário/Convênio OU "02" para Automático/Fundo a Fundo
   def codigo_repasse(code) # 2
-    raise 'Invalide code' unless ['01', '02'].include?(code.to_s) if code.present?
+    return raise 'Invalide code' unless ['01', '02'].include?(code.to_s)
 
     code
   end
@@ -272,10 +267,11 @@ class MCIF460Generator
   # Código_Programa
   def codigo_programa(code) #3
     validate_numeric(code)
+    code.length
     code.rjust(9, '0')
   end
 
-  def gerar_trailer(file, total_clients, quantity_registries)  # 5
+  def gerar_trailer(total_clients, quantity_registries) # 5
     constante = "9999999".ljust(150, ' ')
     total = "#{total_clients}".rjust(5, '0')
     # Quantidade_Registros - Total de Registros (inclusive HEADER e TRAILER)
@@ -286,18 +282,23 @@ class MCIF460Generator
 
 
   def validate_alphanumeric(string)
-    raise 'invalide data' if string.match(/\A[a-zA-Z0-9]*\z/).nil?
+    return raise 'invalide data' if string.match(/\A[a-zA-Z0-9]*\z/).nil?
+    true
   end
 
   def validate_numeric(string)
-    raise 'invalide data' if string.match(/\A[0-9]*\z/).nil?
+    return raise 'invalide data' if string.match(/\A[0-9]*\z/).nil?
   end
 
-  def is_mandatory(code)
-    raise 'mandatory field' if code.nil?
+  def mandatory_field(code)
+    return raise 'mandatory field' if code.nil?
   end
 
   def is_integer?(number)
-    Integer(number) rescue false
+    !!Integer(number) rescue false
+  end
+  def validate_size(text, max)
+    return true if text.to_s.length <= max
+    return raise 'size error'
   end
 end
