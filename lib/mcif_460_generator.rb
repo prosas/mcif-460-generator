@@ -1,303 +1,309 @@
 # frozen_string_literal: true
 
 require "client"
-class MCIF460Generator
-  def initialize(output_file)
-    @output_file = output_file
-    @clients = []
-  end
+module MCIF460
+  class Generator
+    require "tempfile"
 
-  def add_client(_cliente)
-    @clients << Client.new(client)
-  end
+    def initialize(output_file)
+      @output_file = output_file
+      @clients = []
+    end
 
-  def generate_file
-    File.open(@output_file, "w") do |file|
-      generate_header(file)
+    def add_client(client)
+      raise "invalid attribute" unless client.is_a?(MCIF460::Client)
 
-      @clients.each_with_index do |_cliente, _index|
+      @clients << client
+    end
+
+    def generate_file
+      file = Tempfile.new(@output_file)
+
+      @clients.each_with_index do |client, _index|
+        generate_header(file, client)
         generate_detail(file, client)
       end
 
-      file.puts generate_trailer
+      generate_trailer(file, @clients.length, 99) # verificar como fica a qdt de registros. o que é ?
+      file.close
+      debugger 
+      file
     end
-  end
 
-  def generate_header(file, client)
-    # 000000024022025MCIF460
-    file.puts "0000000#{Time.now.strftime("%d%m%Y")}MCIF460"
-    file.puts mci_client_code(client.mci_client_code)
-    file.puts process_number(client.process_number)
-    file.puts sequence_number(client.sequence_number)
-    file.puts layout_version
-    file.puts relationship_agency(client.relationship_agency)
-    file.puts dv_relationship_agency(client.dv_relationship_agency)
-    file.puts acount(client.acount)
-    file.puts dv_acount(client.dv_acount)
-    file.puts kit_indicator
-    file.puts white_spaces(88)
+    def generate_header(file, client)
+      # 000000024022025MCIF460
+      file.write "0000000#{Time.now.strftime("%d%m%Y")}MCIF460"
+      file.write mci_client_code(client.mci_client_code)
+      file.write process_number(client.process_number)
+      file.write sequence_number(client.sequence_number)
+      file.write layout_version
+      file.write relationship_agency(client.relationship_agency)
+      file.write dv_relationship_agency(client.dv_relationship_agency)
+      file.write acount(client.acount)
+      file.write dv_acount(client.dv_acount)
+      file.write kit_indicator
+      file.write white_spaces(88)
 
-    file
-  end
+      file
+    end
 
-  def generate_detail(file, client)
-    file.puts white_spaces(5)
-    file.puts type_detail(client.type_detail)
-    file.puts person_type(client.person_type)
-    file.puts type_cpf_cnpj(client.type_cpf_cnpj)
-    file.puts cpf_cnpj(client.cpf_cnpj)
-    file.puts date_of_birth(client.date_of_birth)
-    file.puts client_name(client.name)
-    file.puts personal_name_client(client.personal_name_client)
-    file.puts white_spaces(1)
-    file.puts free_use(client.free_use)
-    file.puts agile_management_number(client.agile_management_number)
-    file.puts client_agency(client.agency)
-    file.puts dv_client_agency(client.dv_client_agency)
-    file.puts setex_group(client.setex_group)
-    file.puts dv_setex_group(client.dv_setex_group)
-    file.puts legal_nature(client.legal_nature)
-    file.puts pass_code(client.pass_code)
-    file.puts codigo_programa(client.codigo_programa)
-  end
+    def generate_detail(file, client)
+      file.write white_spaces(5)
+      file.write type_detail
+      file.write person_type(client.person_type)
+      file.write type_cpf_cnpj(client.type_cpf_cnpj)
+      file.write cpf_cnpj(client.cpf_cnpj)
+      file.write date_of_birth(client.date_of_birth)
+      file.write client_name(client.name)
+      file.write personal_name_client(client.personal_name_client)
+      file.write white_spaces(1)
+      file.write free_use(client.free_use)
+      file.write agile_management_number(client.agile_management_number)
+      file.write client_agency(client.agency)
+      file.write dv_client_agency(client.dv_client_agency)
+      file.write setex_group(client.setex_group)
+      file.write dv_setex_group(client.dv_setex_group)
+      file.write legal_nature
+      file.write pass_code(client.pass_code)
+      file.write program_code(client.program_code)
 
-  def mci_client_code(code)
-    mandatory_field(code)
-    validate_size(code, 9)
-    validate_numeric(code)
+      file
+    end
 
-    code.rjust(9, "0")
-  end
+    def mci_client_code(code)
+      mandatory_field(code)
+      validate_size(code, 9)
+      validate_numeric(code)
 
-  # Número_Processo
-  def process_number(code = "00000")
-    mandatory_field(code)
-    validate_numeric(code)
+      code.rjust(9, "0")
+    end
 
-    code.rjust(5, "0")
-  end
+    # Número_Processo
+    def process_number(code = "00000")
+      mandatory_field(code)
+      validate_numeric(code)
 
-  # Sequencial_Remessa
-  def sequence_number(code = "00000")
-    mandatory_field(code)
-    validate_numeric(code)
+      code.rjust(5, "0")
+    end
 
-    code.rjust(5, "0")
-  end
+    # Sequencial_Remessa
+    def sequence_number(code = "00000")
+      mandatory_field(code)
+      validate_numeric(code)
 
-  # Versão_Leiaute - valor fixo
-  def layout_version
-    "04"
-  end
+      code.rjust(5, "0")
+    end
 
-  # Agência_Relacionamento
-  def relationship_agency(code = "0000")
-    mandatory_field(code)
-    validate_numeric(code)
+    # Versão_Leiaute - valor fixo
+    def layout_version
+      "04"
+    end
 
-    code.rjust(4, "0")
-  end
+    # Agência_Relacionamento
+    def relationship_agency(code = "0000")
+      mandatory_field(code)
+      validate_numeric(code)
 
-  # DV_Agência_Relacionamento
-  def dv_relationship_agency(code = "0")
-    mandatory_field(code)
-    validate_numeric(code)
+      code.rjust(4, "0")
+    end
 
-    code.rjust(1, "0")
-  end
+    # DV_Agência_Relacionamento
+    def dv_relationship_agency(code = "0")
+      mandatory_field(code)
+      validate_numeric(code)
 
-  # Conta
-  def acount(code = "00000000000")
-    mandatory_field(code)
-    validate_numeric(code)
+      code.rjust(1, "0")
+    end
 
-    code.rjust(11, "0")
-  end
+    # Conta
+    def acount(code = "00000000000")
+      mandatory_field(code)
+      validate_numeric(code)
 
-  # DV Conta
-  def dv_acount(code = "0")
-    mandatory_field(code)
-    validate_numeric(code)
+      code.rjust(11, "0")
+    end
 
-    code.rjust(11, "0")
-  end
+    # DV Conta
+    def dv_acount(code = "0")
+      mandatory_field(code)
+      validate_numeric(code)
 
-  # Indicador_Envio_KIT - fixo 1
-  def kit_indicator
-    "1"
-  end
+      code.rjust(11, "0")
+    end
 
-  def white_spaces(spaces)
-    "".rjust(spaces, " ")
-  end
+    # Indicador_Envio_KIT - fixo 1
+    def kit_indicator
+      "1"
+    end
 
-  # Detail
-  def type_detail
-    "01"
-  end
+    def white_spaces(spaces)
+      "".rjust(spaces, " ")
+    end
 
-  # Tipo_Pessoa - VIDE TABELA
-  # 1	Física	E	Soc Economia Mista GDF
-  # 2	PJ Privada	F	Fundação Estadual
-  # 3	Governo Municipal - Adm Direta (FUNDOS ESTADUAIS)	G	Fundação Municipal
-  # 4	Governo Estadual - Adm Direta	H	Fundação Estadual GDF
-  # 5	Governo Federal - Adm Direta	I	Governo Estadual GDF - Adm Direta
-  # 6	Empresa Pública Federal	J	Autarquia Federal
-  # 7	Soc de Economia Mista Federal	K	Autarquia Estadual
-  # 8	Fundação Federal	L	Autarquia Estadual GDF
-  # 9	Empresa Pública Estadual	M	Autarquia Municipal
-  # A	Empresa Pública Municipal	N	Inst/Entidade Publica Municipal
-  # B	Empresa Pública GDF	O	Inst/Entidade Publica Estadual
-  # C	Soc Economia Mista Estadual   	P	Inst/Entidade Publica Federal
-  # D	Soc Economia Mista Municipal
-  # E	Soc Economia Mista GDF
-  # F	Fundação Estadual
-  # G	Fundação Municipal
-  # H	Fundação Estadual GDF
-  # I	Governo Estadual GDF - Adm Direta
-  # J	Autarquia Federal
-  # K	Autarquia Estadual
-  # L	Autarquia Estadual GDF
-  # M	Autarquia Municipal
-  # N	Inst/Entidade Publica Municipal
-  # O	Inst/Entidade Publica Estadual
-  # P	Inst/Entidade Publica Federal
+    # Detail
+    def type_detail
+      "01"
+    end
 
-  def person_type(type)
-    type_formated = type.to_s.upcase
-    return raise "invalide code to person type" if type_formated.match(/\A[A-P1-9]\z/).nil?
+    # Tipo_Pessoa - VIDE TABELA
+    # 1	Física	E	Soc Economia Mista GDF
+    # 2	PJ Privada	F	Fundação Estadual
+    # 3	Governo Municipal - Adm Direta (FUNDOS ESTADUAIS)	G	Fundação Municipal
+    # 4	Governo Estadual - Adm Direta	H	Fundação Estadual GDF
+    # 5	Governo Federal - Adm Direta	I	Governo Estadual GDF - Adm Direta
+    # 6	Empresa Pública Federal	J	Autarquia Federal
+    # 7	Soc de Economia Mista Federal	K	Autarquia Estadual
+    # 8	Fundação Federal	L	Autarquia Estadual GDF
+    # 9	Empresa Pública Estadual	M	Autarquia Municipal
+    # A	Empresa Pública Municipal	N	Inst/Entidade Publica Municipal
+    # B	Empresa Pública GDF	O	Inst/Entidade Publica Estadual
+    # C	Soc Economia Mista Estadual   	P	Inst/Entidade Publica Federal
+    # D	Soc Economia Mista Municipal
+    # E	Soc Economia Mista GDF
+    # F	Fundação Estadual
+    # G	Fundação Municipal
+    # H	Fundação Estadual GDF
+    # I	Governo Estadual GDF - Adm Direta
+    # J	Autarquia Federal
+    # K	Autarquia Estadual
+    # L	Autarquia Estadual GDF
+    # M	Autarquia Municipal
+    # N	Inst/Entidade Publica Municipal
+    # O	Inst/Entidade Publica Estadual
+    # P	Inst/Entidade Publica Federal
 
-    type_formated
-  end
+    def person_type(type)
+      type_formated = type.to_s.upcase
+      return raise "invalide code to person type" if type_formated.match(/\A[A-P1-9]\z/).nil?
 
-  # Tipo de CPF/CNPJ -Fixo "1" para CPF Próprio, ou  "2" para CPF não Próprio, ou "3" para CNPJ
-  def type_cpf_cnpj(type)
-    return raise "invalide code to person type CPF/CNPJ" unless %w[1 2 3].include?(type.to_s)
+      type_formated
+    end
 
-    type
-  end
+    # Tipo de CPF/CNPJ -Fixo "1" para CPF Próprio, ou  "2" para CPF não Próprio, ou "3" para CNPJ
+    def type_cpf_cnpj(type)
+      return raise "invalide code to person type CPF/CNPJ" unless %w[1 2 3].include?(type.to_s)
 
-  def cpf_cnpj(value)
-    return raise "invalide cpf or cnpj" if !is_integer?(value) || (value.length != 14 && value.length != 11)
+      type
+    end
 
-    value.rjust(14, "0")
-  end
+    def cpf_cnpj(value)
+      return raise "invalide cpf or cnpj" if !validate_numeric(value) || (value.length != 14 && value.length != 11)
 
-  # Data_de_nascimento
-  def date_of_birth(date)
-    return raise "invalid date" if !is_integer?(date) || date.length != 8
+      value.rjust(14, "0")
+    end
 
-    date
-  end
+    # Data_de_nascimento
+    def date_of_birth(date)
+      return raise "invalid date" if !validate_numeric(date) || date.length != 8
 
-  # Nome_Cliente
-  def client_name(name)
-    name.ljust(60, " ")
-  end
+      date
+    end
 
-  # Nome_Personalizado_Cliente
-  def personal_name_client(name)
-    name.ljust(25, " ")
-  end
+    # Nome_Cliente
+    def client_name(name)
+      name.ljust(60, " ")
+    end
 
-  # Uso_Cliente
-  def free_use(text)
-    text.ljust(8, " ")
-  end
+    # Nome_Personalizado_Cliente
+    def personal_name_client(name)
+      name.ljust(25, " ")
+    end
 
-  # Numero_Programa_Gestão_Agil
-  def agile_management_number(num)
-    validate_alphanumeric(num)
+    # Uso_Cliente
+    def free_use(text)
+      text.ljust(8, " ")[0..8]
+    end
 
-    num.rjust(9, "0")
-  end
+    # Numero_Programa_Gestão_Agil
+    def agile_management_number(num)
+      validate_alphanumeric(num)
 
-  # Agência_Cliente
-  def client_agency(ag)
-    validate_numeric(ag)
-    return raise "Invalid client Agency" if ag.to_s.length > 4
+      num.rjust(9, "0")
+    end
 
-    ag.rjust(4, "0")
-  end
+    # Agência_Cliente
+    def client_agency(ag)
+      validate_numeric(ag)
+      return raise "Invalid client Agency" if ag.to_s.length > 4
 
-  # DV_Agência_Cliente
-  def dv_client_agency(code)
-    validate_numeric(code)
+      ag.rjust(4, "0")
+    end
 
-    return raise "invalid DV Agency" if code.to_s != 1
+    # DV_Agência_Cliente
+    def dv_client_agency(code)
+      return raise "invalid DV Agency" if code.to_s.length != 1 || !validate_numeric(code)
 
-    code
-  end
+      code
+    end
 
-  # Grupo_Setex
-  def setex_group(code)
-    validate_numeric(code)
-    return raise "Mandatory value. 2 digits" if code.length != 2
+    # Grupo_Setex
+    def setex_group(code)
+      validate_numeric(code)
+      return raise "Mandatory value. 2 digits" if code.length != 2
 
-    code
-  end
+      code
+    end
 
-  # DV_Grupo Setex
-  def dv_setex_group(code)
-    validate_numeric(code)
-    return raise "Mandatory value. 1 digits" if code.length != 1
+    # DV_Grupo Setex
+    def dv_setex_group(code)
+      validate_numeric(code)
+      return raise "Mandatory value. 1 digits" if code.length != 1
 
-    code
-  end
+      code
+    end
 
-  # Natureza_Jurídica
-  def legal_nature
-    "000"
-  end
+    # Natureza_Jurídica
+    def legal_nature
+      "000"
+    end
 
-  # Código_Repasse -  Fixo "01" para Voluntário/Convênio OU "02" para Automático/Fundo a Fundo
-  def pass_code(code)
-    return raise "Invalide code" unless %w[01 02].include?(code.to_s)
+    # Código_Repasse -  Fixo "01" para Voluntário/Convênio OU "02" para Automático/Fundo a Fundo
+    def pass_code(code)
+      return raise "Invalide code" unless %w[01 02].include?(code.to_s)
 
-    code
-  end
+      code
+    end
 
-  # Código_Programa
-  def codigo_programa(code)
-    validate_numeric(code)
-    code.length
-    code.rjust(9, "0")
-  end
+    # Código_Programa
+    def program_code(code)
+      validate_numeric(code)
+      raise "Invalide program code" if code.length > 3
 
-  def generate_trailer(total_clients, quantity_registries)
-    return raise "invalid trailer" if !is_integer?(total_clients) || !is_integer?(quantity_registries)
+      code.rjust(9, "0")
+    end
 
-    constante = "9999999"
-    total = total_clients.to_s.rjust(5, "0")
-    # Quantidade_Registros - Total de Registros (inclusive HEADER e TRAILER)
-    quantity_registries.to_s.ljust(9, " ")
-    # 129 espaços em branco
-    "#{constante}#{total}#{quantity_registries}".ljust(129, " ")
-  end
+    def generate_trailer(file, total_clients, quantity_registries)
+      return raise "invalid trailer" if !validate_numeric(total_clients) || !validate_numeric(quantity_registries)
 
-  def validate_alphanumeric(string)
-    return raise "invalide data" if string.match(/\A[a-zA-Z0-9]*\z/).nil?
+      constante = "9999999"
+      total = total_clients.to_s.rjust(5, "0")
+      # Quantidade_Registros - Total de Registros (inclusive HEADER e TRAILER)
+      quantity_registries.to_s.ljust(9, " ")
+      file.write "#{constante}#{total}#{quantity_registries}".ljust(129, " ")
 
-    true
-  end
+      file
+    end
 
-  def validate_numeric(string)
-    raise "invalide data" if string.match(/\A[0-9]*\z/).nil?
-  end
+    def validate_alphanumeric(string)
+      return raise "invalide data" if string.match(/\A[a-zA-Z0-9]*\z/).nil?
 
-  def mandatory_field(code)
-    raise "mandatory field" if code.nil?
-  end
+      true
+    end
 
-  def is_integer?(number)
-    !Integer(number).nil?
-  rescue StandardError
-    false
-  end
+    def validate_numeric(string)
+      raise "invalide data" if string.to_s.match(/\A[0-9]*\z/).nil?
 
-  def validate_size(text, max)
-    return true if text.to_s.length <= max
+      true
+    end
 
-    raise "Size error"
+    def mandatory_field(code)
+      raise "mandatory field" if code.nil?
+    end
+
+    def validate_size(text, max)
+      return true if text.to_s.length <= max
+
+      raise "Size error"
+    end
   end
 end
