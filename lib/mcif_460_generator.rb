@@ -26,7 +26,7 @@ module MCIF460
 
       generate_trailer(file, @clients.length, 99) # verificar como fica a qdt de registros. o que é ?
       file.close
-      debugger 
+
       file
     end
 

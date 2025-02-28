@@ -160,10 +160,11 @@ module MCIF460
       const = "9999999"
       file = Tempfile.new('')
       expected_output = "#{const}#{"10".rjust(5, "0")}#{"20".ljust(9, " ")}".ljust(129, " ")
- 
+      
+      @generator.generate_trailer(file, total_clients, quantity_registries)
+      file.close
 
-      # ajustar teste
-      assert_equal expected_output, File.read(@generator.generate_trailer(file, total_clients, quantity_registries).path)
+      assert_equal expected_output, File.read(file.path)
     end
 
     def test_generate_trailer_invalid_input
